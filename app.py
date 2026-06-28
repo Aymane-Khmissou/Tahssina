@@ -25,7 +25,7 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8MB hard cap (defense in depth for uploads)
 
-DATABASE    = os.path.join(os.path.dirname(__file__), 'tahssina.db')
+DATABASE = os.environ.get('DATABASE_PATH', '/app/data/tahssina.db')
 UPLOAD_DIR  = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 ALLOWED_EXT = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 MAX_FILE_MB = 5
