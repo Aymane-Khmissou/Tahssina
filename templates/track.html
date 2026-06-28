@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Your Queue — Tahssina{% endblock %}
+{% block body_attrs %}
+  data-queue-id="{{ entry.id }}"
+  data-barber-id="{{ entry.barber_id }}"
+  data-status="{{ entry.status }}"
+  data-duration="{{ entry.assigned_duration }}"
+  data-appt-time="{{ entry.appointment_time }}"
+{% endblock %}
+{% block content %}
+<div class="container" style="max-width:680px;padding-block:24px">
+
+  {% if ns_card == 'red' %}
+    <div style="background:rgba(224,80,80,.12);border:1px solid rgba(224,80,80,.4);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.5rem">🔴</span>
+        <div>
+          <div style="font-weight:700;color:var(--red)">Account Blocked</div>
+          <div style="font-size:.8rem;color:var(--text-muted)">4+ no-shows registered. Your account is blocked for 2 weeks from using the platform.</div>
+        </div>
+      </div>
+    </div>
+  {% elif ns_card == 'yellow' %}
+    <div style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.5rem">🟡</span>
+        <div>
+          <div style="font-weight:700;color:var(--gold)">Warning — 3 No-Shows</div>
+          <div style="font-size:.8rem;color:var(--text-muted)">Future bookings require manual barber approval. One more no-show = 2-week block.</div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if entry.loyalty_visits > 0 and entry.loyalty_visits % 10 == 0 %}
+    <div class="loyalty-notif" style="margin-bottom:24px">
+      <span class="loyalty-icon">🏆</span>
+      <div>
+        <div class="loyalty-title">Congratulations! Tahssina Favor Earned</div>
+        <div class="loyalty-desc">You just earned your 10th-visit reward at {{ entry.salon_name }}! Mention it to your barber for a free or discounted session.</div>
+        <a href="{{ url_for('loyalty_cards_page') }}" class="btn btn-primary btn-sm" style="margin-top:10px">View Loyalty Cards</a>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="card card-gold" style="margin-bottom:16px">
+    <div class="card-header">
+      <span class="card-title">{{ entry.salon_name }}</span>
+      <span id="status-badge" class="badge badge-{{ entry.status }}" data-status="{{ entry.status }}">{{ entry.status }}</span>
+    </div>
+
+    {% if entry.status == "ongoing" %}
+      <div class="progress-ring-wrap">
+        <div style="position:relative;display:inline-block">
+          <svg class="progress-ring-svg" width="160" height="160" viewBox="0 0 160 160">
+            <circle class="progress-ring-track" cx="80" cy="80" r="68"/>
+            <circle id="progress-ring-fill" class="progress-ring-fill" cx="80" cy="80" r="68"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(0deg)">
+            <span id="progress-time" class="progress-time">--</span>
+            <span class="progress-sublabel">remaining</span>
+          </div>
+        </div>
+        <div class="in-chair-badge">
+          <span class="pulse-dot"></span>
+          In the Chair
+        </div>
+      </div>
+
+    {% elif entry.status == "waiting" %}
+      <div class="track-hero">
+        <div class="queue-label">Estimated Wait</div>
+        <div class="queue-number" id="wait-display">{{ wait_mins }} min</div>
+        <div class="queue-label" style="margin-top:8px">Appointment: {{ entry.appointment_time }}</div>
+      </div>
+      <div style="text-align:center;padding:8px 0 16px">
+        <span class="live-dot">Live updates active</span>
+      </div>
+
+    {% elif entry.status == "pending" %}
+      <div class="track-hero">
+        <div class="queue-number" style="font-size:clamp(1.5rem,5vw,2.5rem);color:var(--blue)">Pending Review</div>
+        <p class="muted" style="margin-top:8px;font-size:.85rem">Your request is awaiting barber confirmation.</p>
+      </div>
+
+    {% elif entry.status == "done" %}
+      <div class="track-hero">
+        <div class="queue-number" style="font-size:clamp(1.5rem,5vw,2.5rem);color:var(--green)">✓ Complete</div>
+        <p class="muted" style="margin-top:8px;font-size:.85rem">Your session is complete. Thanks for visiting!</p>
+      </div>
+
+    {% elif entry.status in ("rejected", "noshow") %}
+      <div class="track-hero">
+        <div class="queue-number" style="font-size:clamp(1.5rem,5vw,2.5rem);color:var(--red)">
+          {% if entry.status == "noshow" %}No-Show Recorded{% else %}Booking Rejected{% endif %}
+        </div>
+        {% if entry.no_show_count >= 3 %}
+          <p style="color:var(--red);font-size:.83rem;margin-top:8px">⚠️ Your account has 3+ no-shows. Future bookings require manual approval.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header"><span class="card-title">Booking Details</span></div>
+    {% for s in services %}
+      <div class="queue-detail-row">
+        <span>{{ s.name }}</span>
+        <span>{{ "%.0f"|format(s.price) }} MAD · {{ s.duration }} min</span>
+      </div>
+    {% endfor %}
+    <div class="divider" style="margin-block:8px"></div>
+    <div class="queue-detail-row">
+      <span style="color:var(--text-muted)">Total</span>
+      <span style="color:var(--gold);font-weight:700">{{ "%.2f"|format(entry.total_price) }} MAD</span>
+    </div>
+    <div class="queue-detail-row">
+      <span style="color:var(--text-muted)">Loyalty Visits</span>
+      <span>{{ entry.loyalty_visits }} visit{{ "s" if entry.loyalty_visits != 1 }}</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header"><span class="card-title">Location</span></div>
+    <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:8px">📍 {{ entry.address }}</p>
+    <p style="font-size:.88rem;color:var(--text-primary);margin-bottom:14px">📞 {{ entry.barber_phone }}</p>
+    <div class="map-actions">
+      <a href="{{ maps_url }}" target="_blank" class="map-btn map-btn-gmaps">📍 Google Maps</a>
+      <a href="{{ waze_url }}" target="_blank" class="map-btn map-btn-waze">🔵 Waze</a>
+    </div>
+  </div>
+
+  {% if entry.status == "done" and not already_rated %}
+    <div class="card card-gold" style="margin-bottom:16px">
+      <div class="card-header"><span class="card-title">Rate Your Experience</span></div>
+      <form id="rating-form" method="post" action="{{ url_for('rate_barber') }}" class="stack stack-md">
+        <input type="hidden" name="barber_id" value="{{ entry.barber_id }}">
+        <input type="hidden" name="queue_id" value="{{ entry.id }}">
+        <div class="form-group">
+          <label class="form-label">Your Rating</label>
+          <div class="star-rating">
+            {% for i in [5,4,3,2,1] %}
+              <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" required>
+              <label for="star{{ i }}">★</label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="review_text">Review (Optional)</label>
+          <textarea id="review_text" name="review_text" class="form-control" placeholder="Share your experience..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Review</button>
+      </form>
+    </div>
+  {% endif %}
+
+  {% if entry.status in ("pending", "waiting", "ongoing") %}
+    <form method="post" action="{{ url_for('cancel_queue', queue_id=entry.id) }}"
+          onsubmit="return confirm('Cancel this booking?')">
+      <button type="submit" class="btn btn-danger btn-full">Cancel Booking</button>
+    </form>
+  {% endif %}
+
+</div>
+{% endblock %}

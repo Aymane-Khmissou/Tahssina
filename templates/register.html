@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Register — Tahssina{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card" style="max-width:500px">
+    <div class="auth-logo"><div class="logo" style="justify-content:center">Tahssina <span class="logo-accent arabic">تحسينة</span></div></div>
+    <h2 style="text-align:center;margin-bottom:24px;font-size:1.3rem">Create your account</h2>
+    <form method="post" action="{{ url_for('register') }}" class="stack stack-md">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="username">Full Name</label>
+          <input id="username" name="username" type="text" class="form-control" placeholder="Ahmed Benali" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" class="form-control" placeholder="+212 6XX XXX XXX" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input id="email" name="email" type="email" class="form-control" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input id="password" name="password" type="password" class="form-control" placeholder="Min. 8 characters" required minlength="8">
+      </div>
+      <div class="form-group">
+        <label class="form-label">I am a</label>
+        <select id="role-select" name="role" class="form-control" required>
+          <option value="">-- Select role --</option>
+          <option value="client">Client</option>
+          <option value="barber">Barber / Salon Owner</option>
+        </select>
+      </div>
+      <div class="barber-fields">
+        <div class="form-group">
+          <label class="form-label" for="salon_name">Salon Name</label>
+          <input id="salon_name" name="salon_name" type="text" class="form-control" placeholder="e.g. Royal Cuts Tétouan">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="address">Salon Address</label>
+          <input id="address" name="address" type="text" class="form-control" placeholder="Street, City, Country">
+          <span class="form-hint">Used for maps navigation and email reminders.</span>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    </form>
+    <p style="text-align:center;margin-top:20px;font-size:.85rem;color:var(--text-muted)">
+      Already registered? <a href="{{ url_for('login') }}">Sign in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

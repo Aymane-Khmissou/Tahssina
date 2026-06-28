@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}QR Code — {{ session.username }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width:520px;padding-block:32px 48px">
+  <div class="page-header">
+    <h1>QR Code dyalek</h1>
+    <p>Hda had QR code f bab d-salon dyalek — clients yscanniwh o ydkhlo l-queue mubashara.</p>
+  </div>
+
+  <div class="card" style="text-align:center;padding:32px 24px;margin-bottom:20px">
+    <div style="display:inline-block;padding:16px;background:#fff;border-radius:16px;margin-bottom:20px">
+      {{ qr_svg|safe }}
+    </div>
+    <div style="font-size:.8rem;color:var(--text-muted);word-break:break-all;margin-bottom:16px">{{ qr_url }}</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button onclick="copyLink()" class="btn btn-secondary btn-sm">📋 Copy Link</button>
+      <button onclick="printQR()" class="btn btn-primary btn-sm">🖨️ Print QR</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:16px">
+    <div style="font-size:.82rem;color:var(--text-muted)">
+      <strong style="color:var(--text-primary)">Kifach khadam:</strong><br>
+      1. Print had QR code o 3llouh f bab d-salon<br>
+      2. Client yscannhi b téléphone dyalou<br>
+      3. Yimla ismu o numéro → ydkhol l-queue mubashara<br>
+      4. Live wait time shown on their phone instantly
+    </div>
+  </div>
+
+  <div style="margin-top:16px;text-align:center">
+    <a href="{{ url_for('barber_dashboard') }}" class="btn btn-secondary btn-sm">← Dashboard</a>
+  </div>
+</div>
+<script>
+function copyLink() {
+  navigator.clipboard.writeText('{{ qr_url }}').then(() => {
+    showToast('Link copied!', 'success');
+  });
+}
+function printQR() {
+  const svg = document.querySelector('.card svg, .card img');
+  if (!svg) return;
+  const w = window.open('', '_blank');
+  w.document.write('<html><body style="text-align:center;padding:40px;font-family:sans-serif">' +
+    '<h2>Tahssina — Walk-in QR Code</h2>' +
+    '<div style="margin:20px auto;max-width:300px">' + svg.outerHTML + '</div>' +
+    '<p style="color:#666;font-size:13px">Scan to join the queue</p>' +
+    '<script>window.onload=function(){window.print();window.close()}<\/script>' +
+    '</body></html>');
+  w.document.close();
+}
+</script>
+{% endblock %}

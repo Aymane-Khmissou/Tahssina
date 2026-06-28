@@ -1,0 +1,7 @@
+*.db
+*.pyc
+__pycache__/
+static/uploads/*
+!static/uploads/.gitkeep
+.env
+*.log

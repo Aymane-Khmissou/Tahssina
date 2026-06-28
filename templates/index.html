@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Tahssina — Digital Barbershop Queue{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <p class="hero-eyebrow">Premium Queue Management</p>
+    <h1 class="hero-title">Skip the Wait,<br><span class="gold-text">Own Your Time.</span></h1>
+    <p class="hero-subtitle">Tahssina digitizes your barbershop experience — book in seconds, track in real-time, never wait in line again.</p>
+    <div class="hero-cta">
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started Free</a>
+      <a href="{{ url_for('login') }}" class="btn btn-secondary btn-lg">Sign In</a>
+    </div>
+    <div class="feature-grid" style="max-width:900px;margin:60px auto 0">
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <h3>Real-Time Queue</h3>
+        <p>Live position tracking via Server-Sent Events. See exactly where you are — no guessing, no refreshing.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📱</div>
+        <h3>Book From Anywhere</h3>
+        <p>Multi-service selection with instant price calculation. Confirm your slot from your phone in under 30 seconds.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🏆</div>
+        <h3>Loyalty Rewards</h3>
+        <p>Every 10th visit unlocks a special reward. The system tracks it automatically — no punch cards needed.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔔</div>
+        <h3>Smart Reminders</h3>
+        <p>Automated email reminders sent 2 hours before your appointment with directions and full booking details.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📊</div>
+        <h3>Barber Analytics</h3>
+        <p>Revenue tracking, peak hour charts, and client loyalty data — all in one clean dashboard.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🛡️</div>
+        <h3>Anti-Spam Protection</h3>
+        <p>One active booking per day per client. No-show penalty system keeps the queue fair for everyone.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

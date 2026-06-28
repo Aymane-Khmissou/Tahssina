@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}{{ barber.salon_name }} — Tahssina{% endblock %}
+{% block content %}
+<div class="container" style="max-width:680px;padding-block:24px 48px">
+
+  <!-- Salon Header -->
+  <div class="card card-gold" style="margin-bottom:20px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <h1 style="font-size:1.5rem;margin-bottom:4px">{{ barber.salon_name }}</h1>
+        <div style="font-size:.82rem;color:var(--text-muted)">✂️ by {{ barber.username }}</div>
+        <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px">📍 {{ barber.address }}</div>
+        <div style="font-size:.82rem;color:var(--text-muted)">📞 {{ barber.barber_phone }}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="badge {% if barber.is_open %}badge-open{% else %}badge-closed{% endif %}">
+          {% if barber.is_open %}● Open{% else %}● Closed{% endif %}
+        </span>
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px">
+          {{ barber.open_time }} – {{ barber.close_time }}
+        </div>
+        {% if avg_rating.c > 0 %}
+          <div style="margin-top:6px">
+            <span class="stars">{% for i in range(1,6) %}{% if i <= avg_rating.r|round %}★{% else %}☆{% endif %}{% endfor %}</span>
+            <span style="font-size:.73rem;color:var(--text-muted)">({{ avg_rating.c }})</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Live Queue Count -->
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+      <div style="flex:1;padding:12px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.2);border-radius:var(--radius-sm);text-align:center">
+        <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">{{ queue_count + walkin_count }}</div>
+        <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">People Waiting</div>
+      </div>
+      {% if barber.favor_service_name %}
+      <div style="flex:1;padding:12px;background:rgba(61,190,108,.06);border:1px solid rgba(61,190,108,.15);border-radius:var(--radius-sm);text-align:center">
+        <div style="font-size:1.1rem;font-weight:700;color:var(--green)">🎁</div>
+        <div style="font-size:.72rem;color:var(--text-muted)">10th visit = Free {{ barber.favor_service_name }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Walk-in Check-in -->
+  {% if barber.is_open %}
+  <div class="card" style="margin-bottom:20px;border-color:rgba(212,175,55,.3)">
+    <div class="card-header"><span class="card-title">⚡ Walk-in — Join Queue Now</span></div>
+    <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:16px">No appointment? Walk in and join the live queue instantly.</p>
+    <form method="post" action="{{ url_for('walkin_checkin', barber_id=barber.id) }}" class="stack stack-md">
+      <div class="form-group">
+        <label class="form-label">Ismek</label>
+        <input name="name" type="text" class="form-control" placeholder="ex: Yassine" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Numéro dyalek</label>
+        <input name="phone" type="tel" class="form-control" placeholder="06XXXXXXXX" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">✓ Dkhol l-Queue</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="card" style="margin-bottom:20px;text-align:center;padding:28px">
+    <div style="font-size:2rem;margin-bottom:8px">🔒</div>
+    <div style="font-weight:600;margin-bottom:4px">Salon Msaker</div>
+    <div class="muted" style="font-size:.83rem">Yarj3u yftahu {{ barber.open_time }} – {{ barber.close_time }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Services -->
+  {% if services %}
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="card-title">Services & Prix</span></div>
+    <div class="stack stack-sm">
+      {% for s in services %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600;font-size:.9rem">{{ s.name }}</div>
+            <div style="font-size:.76rem;color:var(--text-muted)">⏱ {{ s.duration }} min</div>
+          </div>
+          <div style="font-weight:700;color:var(--gold)">{{ "%.0f"|format(s.price) }} MAD</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Gallery -->
+  {% if gallery %}
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="card-title">📸 Gallery</span></div>
+    <div class="gallery-grid">
+      {% for photo in gallery %}
+        <div class="gallery-item" onclick="openLightbox('{{ photo.image_url }}','{{ photo.caption|e }}')">
+          <img src="{{ photo.image_url }}" alt="{{ photo.caption or 'Cut' }}" loading="lazy">
+          {% if photo.caption %}<div class="gallery-caption">{{ photo.caption }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Book via app link -->
+  {% if session.user_id and session.role == 'client' %}
+    <a href="{{ url_for('book', barber_id=barber.id) }}" class="btn btn-secondary btn-full">
+      📅 Book Online Instead
+    </a>
+  {% else %}
+    <div style="text-align:center;margin-top:8px">
+      <a href="{{ url_for('register') }}" class="btn btn-secondary">Register for full booking experience</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="this.style.display='none'"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;cursor:zoom-out">
+  <img id="lb-img" src="" style="max-width:92vw;max-height:80vh;border-radius:8px;object-fit:contain">
+  <div id="lb-cap" style="color:var(--text-muted);font-size:.85rem"></div>
+</div>
+<script>
+function openLightbox(src, cap) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lb-cap').textContent = cap;
+  lb.style.display = 'flex';
+}
+</script>
+{% endblock %}

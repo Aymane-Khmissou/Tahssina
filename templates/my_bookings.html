@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}My Bookings — Tahssina{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>My Bookings</h1>
+    <p>Track and manage all your bookings — cancel anytime, even mid-session.</p>
+  </div>
+
+  {% if bookings %}
+    <div class="stack stack-md" style="padding-block:16px 40px">
+      {% for b in bookings %}
+        <div class="card queue-card-{{ b.status }}">
+          <div class="card-header">
+            <div>
+              <span class="card-title">{{ b.salon_name }}</span>
+              <div class="muted" style="margin-top:2px">{{ b.appointment_time }}</div>
+            </div>
+            <span class="badge badge-{{ b.status }}">{{ b.status }}</span>
+          </div>
+
+          <div class="stack stack-sm" style="margin-bottom:12px">
+            {% for s in b.services %}
+              <div class="queue-detail-row">
+                <span>{{ s.name }}</span>
+                <span>{{ "%.0f"|format(s.price) }} MAD · {{ s.duration }} min</span>
+              </div>
+            {% endfor %}
+            <div class="queue-detail-row">
+              <span style="color:var(--text-muted)">Total</span>
+              <span style="color:var(--gold);font-weight:700">{{ "%.2f"|format(b.total_price) }} MAD</span>
+            </div>
+            <div class="queue-detail-row">
+              <span style="color:var(--text-muted)">Address</span>
+              <span>{{ b.address }}</span>
+            </div>
+            <div class="queue-detail-row">
+              <span style="color:var(--text-muted)">Barber Phone</span>
+              <span>{{ b.barber_phone }}</span>
+            </div>
+          </div>
+
+          <div class="cluster" style="gap:10px;margin-bottom:12px">
+            <a href="{{ url_for('track', queue_id=b.id) }}" class="btn btn-secondary btn-sm">View Details</a>
+            {% if b.status in ("pending", "waiting", "ongoing") %}
+              <form method="post" action="{{ url_for('cancel_queue', queue_id=b.id) }}"
+                    onsubmit="return confirm('Cancel this booking?')" style="margin:0">
+                <button type="submit" class="btn btn-danger btn-sm">✕ Cancel Booking</button>
+              </form>
+            {% endif %}
+          </div>
+
+          <div class="rate-barber-row" data-barber-id="{{ b.barber_id }}" style="padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="muted" style="font-size:.78rem">⭐ Rate Barber:</span>
+            <div class="star-rating star-rating-inline" data-barber-id="{{ b.barber_id }}">
+              {% for i in [5,4,3,2,1] %}
+                <input type="radio" name="rate-barber-{{ b.id }}" id="rate-barber-{{ b.id }}-{{ i }}" value="{{ i }}">
+                <label for="rate-barber-{{ b.id }}-{{ i }}" style="font-size:1.2rem">★</label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state" style="margin-top:60px">
+      <div class="empty-state-icon">📋</div>
+      <h3>No bookings yet</h3>
+      <p>Once you book a slot, it will appear here.</p>
+      <div style="margin-top:16px">
+        <a href="{{ url_for('client_home') }}" class="btn btn-primary">Browse Barbers</a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ client.username }} — Client History{% endblock %}
+{% block content %}
+<div class="container" style="max-width:800px;padding-block:28px 48px">
+
+  <div style="margin-bottom:20px">
+    <a href="{{ url_for('barber_dashboard') }}" style="font-size:.85rem;color:var(--text-muted)">← Dashboard</a>
+  </div>
+
+  <!-- Client Header -->
+  <div class="card card-gold" style="margin-bottom:20px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>
+        <h2 style="font-size:1.4rem;margin-bottom:6px">{{ client.username }}</h2>
+        <div style="font-size:.85rem;color:var(--text-muted);display:flex;flex-direction:column;gap:3px">
+          <span>📞 {{ client.phone }}</span>
+          <span>✉️ {{ client.email }}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        {% if client.no_show_count >= 3 %}
+          <span class="badge badge-rejected">⚠️ {{ client.no_show_count }} No-Shows</span>
+        {% elif client.no_show_count > 0 %}
+          <span class="badge badge-pending">{{ client.no_show_count }} No-Show(s)</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-grid" style="margin-top:20px">
+      <div class="stat-card">
+        <div class="stat-label">Total Visits</div>
+        <div class="stat-value">{{ visits|length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-value">{{ "%.0f"|format(total_spent) }}<span class="stat-unit">MAD</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Stamps</div>
+        <div class="stat-value" style="font-size:1.2rem">
+          {% if loyalty %}
+            {{ loyalty.stamps }}/10
+          {% else %}0/10{% endif %}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Favors Earned</div>
+        <div class="stat-value">
+          {% if loyalty %}{{ loyalty.total_earned }}{% else %}0{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Loyalty mini-card -->
+    {% if loyalty %}
+      <div style="margin-top:16px;padding:12px 16px;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.2);border-radius:var(--radius-sm)">
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">LOYALTY STAMPS</div>
+        <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:5px">
+          {% for i in range(1, 11) %}
+            <div style="text-align:center;font-size:1.1rem">
+              {% if i <= loyalty.stamps %}
+                <span title="Stamp {{ i }}">✂️</span>
+              {% else %}
+                <span style="opacity:.2">○</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        {% if loyalty.stamps >= 8 %}
+          <div style="margin-top:8px;font-size:.78rem;color:var(--gold)">⚡ {{ 10 - loyalty.stamps }} more stamp(s) until Tahssina Favor!</div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <!-- My rating of this client -->
+    {% if barber_rating %}
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <span class="muted" style="font-size:.78rem">YOUR RATING OF THIS CLIENT</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span class="stars">
+            {% for i in range(1,6) %}{% if i <= barber_rating.rating %}★{% else %}☆{% endif %}{% endfor %}
+          </span>
+          {% if barber_rating.note %}<span style="font-size:.83rem;color:var(--text-muted)">— {{ barber_rating.note }}</span>{% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Visit History -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Visit History</span>
+      <span class="muted" style="font-size:.8rem">{{ visits|length }} session{{ "s" if visits|length != 1 }}</span>
+    </div>
+
+    {% if visits %}
+      <div class="stack stack-sm">
+        {% for v in visits %}
+          <div style="padding:12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border)">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:.88rem;font-weight:600;margin-bottom:3px">{{ v.appointment_time }}</div>
+                {% if v.services_list %}
+                  <div style="font-size:.8rem;color:var(--text-muted)">{{ v.services_list }}</div>
+                {% endif %}
+                {% if v.loyalty_reward %}
+                  <span class="loyalty-badge" style="margin-top:4px;display:inline-flex">🏆 Favor Earned</span>
+                {% endif %}
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="color:var(--gold);font-weight:700;font-size:.95rem">{{ "%.0f"|format(v.total_price) }} MAD</div>
+                <div style="margin-top:3px"><span class="badge badge-{{ v.status }}" style="font-size:.68rem">{{ v.status }}</span></div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h3>No visits yet</h3>
+        <p>This client has not completed any sessions with you.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

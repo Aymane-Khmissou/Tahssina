@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Loyalty Cards — Tahssina{% endblock %}
+{% block content %}
+<div class="container" style="max-width:800px;padding-block:28px 48px">
+
+  <div class="page-header">
+    <h1>Loyalty Cards <span class="gold-text">✂</span></h1>
+    <p>Collect 10 stamps at the same barber and earn a Tahssina Favor — a free or discounted session.</p>
+  </div>
+
+  {% if cards %}
+    <div class="stack stack-lg" style="margin-top:8px">
+      {% for card in cards %}
+        <div class="loyalty-card-widget">
+
+          <!-- Card Header -->
+          <div class="lc-header">
+            <div>
+              <div class="lc-salon-name">{{ card.salon_name }}</div>
+              <div class="lc-salon-addr">📍 {{ card.address }}</div>
+              <div class="lc-salon-phone" style="margin-top:2px">📞 {{ card.barber_phone }}</div>
+            </div>
+            <div class="lc-favors">
+              <div class="lc-favors-count">{{ card.total_earned }}</div>
+              <div class="lc-favors-label">Favor{{ "s" if card.total_earned != 1 }} Earned</div>
+            </div>
+          </div>
+
+          <!-- Stamp Grid -->
+          <div class="lc-stamps-label">
+            <span>{{ card.stamps }}/10 stamps</span>
+            {% if card.stamps >= 8 %}
+              <span class="badge badge-waiting" style="font-size:.7rem">Almost there!</span>
+            {% endif %}
+          </div>
+          <div class="lc-stamp-grid">
+            {% for i in range(1, 11) %}
+              <div class="lc-stamp {% if i <= card.stamps %}lc-stamp-filled{% endif %}">
+                {% if i <= card.stamps %}
+                  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="14" fill="#D4AF37" fill-opacity=".15" stroke="#D4AF37" stroke-width="1.5"/>
+                    <text x="16" y="21" text-anchor="middle" font-size="14" fill="#D4AF37">✂</text>
+                  </svg>
+                {% else %}
+                  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                  </svg>
+                {% endif %}
+                <span class="lc-stamp-num">{{ i }}</span>
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Progress bar -->
+          <div class="lc-progress-wrap">
+            <div class="lc-progress-bar" style="width:{{ (card.stamps / 10 * 100)|int }}%"></div>
+          </div>
+
+          <!-- Footer -->
+          <div class="lc-footer">
+            {% if card.stamps == 0 %}
+              <span class="muted" style="font-size:.8rem">Book your first session to start collecting stamps</span>
+            {% elif card.stamps < 10 %}
+              <span class="muted" style="font-size:.8rem">{{ 10 - card.stamps }} more stamp{{ "s" if (10 - card.stamps) != 1 }} until your Tahssina Favor 🎁</span>
+            {% else %}
+              <span style="color:var(--green);font-weight:700;font-size:.85rem">🎉 Favor ready — show this to your barber!</span>
+            {% endif %}
+            <a href="{{ url_for('book', barber_id=card.barber_id) }}" class="btn btn-primary btn-sm" style="margin-left:auto">Book Again →</a>
+          </div>
+
+          {% if card.favor_service_name %}
+            <div style="padding:10px 22px;background:rgba(212,175,55,.05);border-top:1px solid rgba(212,175,55,.12);display:flex;align-items:center;gap:8px;font-size:.8rem">
+              <span style="font-size:1.1rem">🎁</span>
+              <span style="color:var(--text-muted)">Your Tahssina Favor at this salon:</span>
+              <strong style="color:var(--gold)">Free {{ card.favor_service_name }}</strong>
+            </div>
+          {% endif %}
+
+          {% if card.total_earned > 0 %}
+            <div class="lc-earned-banner">
+              🏆 You have earned <strong>{{ card.total_earned }} Tahssina Favor{{ "s" if card.total_earned != 1 }}</strong> at {{ card.salon_name }}
+            </div>
+          {% endif %}
+
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="empty-state" style="margin-top:60px">
+      <div class="empty-state-icon">✂️</div>
+      <h3>No loyalty cards yet</h3>
+      <p>Complete your first session at any barber to get your first stamp.</p>
+      <div style="margin-top:20px">
+        <a href="{{ url_for('client_home') }}" class="btn btn-primary">Explore Barbers</a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Tahssina{% endblock %}
+{% block body_attrs %}data-barber-id="{{ barber.id }}"{% endblock %}
+{% block head %}
+<style>
+.dash-tabs { display:flex; gap:4px; margin-bottom:16px; flex-wrap:wrap; }
+.dash-tab  { padding:8px 14px; border-radius:var(--radius-sm); font-size:.82rem; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--bg-card); color:var(--text-muted); transition:all var(--transition); }
+.dash-tab.active { background:var(--gold); color:#121212; border-color:var(--gold); }
+.dash-panel { display:none; } .dash-panel.active { display:block; }
+.gallery-manage-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; }
+.gallery-manage-item { position:relative; aspect-ratio:1; border-radius:var(--radius-sm); overflow:hidden; }
+.gallery-manage-item img { width:100%;height:100%;object-fit:cover; }
+.gallery-manage-del { position:absolute;top:4px;right:4px;background:rgba(224,80,80,.9);color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:.7rem; }
+.client-list-row { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border);flex-wrap:wrap; }
+.client-list-info { flex:1; }
+.client-list-name { font-weight:600;font-size:.9rem; }
+.client-list-meta { font-size:.75rem;color:var(--text-muted); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="cluster cluster-between" style="flex-wrap:wrap;gap:12px">
+      <div>
+        <h1>{{ barber.salon_name }}</h1>
+        <p style="margin-top:4px">{{ barber.address }}</p>
+      </div>
+      <div class="cluster" style="gap:10px;flex-wrap:wrap">
+        <a href="{{ url_for('barber_qrcode') }}" class="btn btn-secondary btn-sm">📱 QR Code</a>
+        <span id="live-indicator" class="live-dot" style="display:none">Live</span>
+        <span id="shop-status-badge" class="badge {% if barber.is_open %}badge-open{% else %}badge-closed{% endif %}">
+          {% if barber.is_open %}● Open{% else %}● Closed{% endif %}
+        </span>
+        <label class="toggle-wrap">
+          <div class="toggle">
+            <input type="checkbox" id="shop-toggle-input" {% if barber.is_open %}checked{% endif %}>
+            <span class="toggle-slider"></span>
+          </div>
+          <span id="shop-status-label" class="toggle-label {% if barber.is_open %}gold-text{% endif %}">
+            {% if barber.is_open %}Open for Business{% else %}Shop Closed{% endif %}
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+
+    <!-- MAIN COLUMN -->
+    <div class="stack stack-lg">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-value">{{ "%.0f"|format(today_earnings) }}<span class="stat-unit">MAD</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Week</div>
+          <div class="stat-value">{{ "%.0f"|format(week_earnings) }}<span class="stat-unit">MAD</span></div>
+        </div>
+      </div>
+
+      <!-- Main Tabs -->
+      <div>
+        <div class="dash-tabs">
+          <button class="dash-tab active" onclick="switchTab('queue')">📋 Queue</button>
+          <button class="dash-tab" onclick="switchTab('walkin')">⚡ Walk-ins</button>
+          <button class="dash-tab" onclick="switchTab('clients')">👥 Clients</button>
+          <button class="dash-tab" onclick="switchTab('gallery')">📸 Gallery</button>
+        </div>
+
+        <!-- TAB: QUEUE -->
+        <div class="dash-panel active" id="tab-queue">
+      <!-- Live Queue -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Live Queue</span>
+          <span class="live-dot" style="font-size:.78rem">Auto-updating</span>
+        </div>
+        <div id="queue-live-list">
+          {% if queue_rows %}
+            {% for r in queue_rows %}
+              {% set warn = r.no_show_count >= 3 %}
+              <div class="queue-card queue-card-{{ r.status }}" id="qcard-{{ r.id }}" style="margin-bottom:12px">
+                <div class="queue-card-header">
+                  <div class="queue-client-info">
+                    <span class="queue-client-name">{{ r.username }}</span>
+                    <span class="queue-client-meta">{{ r.phone }}</span>
+                    <a href="#client-history-panel"
+                       onclick="openHistoryPanel({{ r.client_id }}, '{{ r.username|e }}')"
+                       class="muted" style="font-size:.73rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:2px;color:var(--gold)">📋 View History</a>
+                    {% if r.client_avg_rating %}
+                      <span class="stars" style="font-size:.78rem">
+                        {% for i in range(1,6) %}{% if i <= r.client_avg_rating|round %}★{% else %}☆{% endif %}{% endfor %}
+                        <span class="muted">client rating</span>
+                      </span>
+                    {% endif %}
+                  </div>
+                  <div class="cluster" style="gap:6px">
+                    {% if r.no_show_count >= 4 %}
+                      <span class="badge badge-rejected" style="font-size:.7rem">🔴 BLOCKED {{ r.no_show_count }} no-shows</span>
+                    {% elif r.no_show_count >= 3 %}
+                      <span class="badge badge-waiting" style="font-size:.7rem;background:rgba(212,175,55,.15);color:var(--gold)">🟡 WARNING {{ r.no_show_count }} no-shows</span>
+                    {% elif r.no_show_count > 0 %}
+                      <span class="no-show-warning" style="font-size:.7rem">⚠️ {{ r.no_show_count }} no-show(s)</span>
+                    {% endif %}
+                    {% if r.loyalty_reward %}
+                      <span class="loyalty-badge">🏆 10th Visit!</span>
+                    {% endif %}
+                    <span class="badge badge-{{ r.status }}">{{ r.status }}</span>
+                  </div>
+                </div>
+                <div class="queue-card-body">
+                  <div class="queue-detail-row"><span>Appointment</span><span>{{ r.appointment_time }}</span></div>
+                  <div class="queue-detail-row"><span>Duration</span><span>{{ r.assigned_duration }} min</span></div>
+                  <div class="queue-detail-row"><span>Total</span><span style="color:var(--gold);font-weight:700">{{ "%.2f"|format(r.total_price) }} MAD</span></div>
+                </div>
+                <div class="queue-actions">
+                  {% if r.status == "pending" %}
+                    <button class="btn btn-success btn-sm" data-action="accept" data-queue-id="{{ r.id }}">✓ Accept</button>
+                    <button class="btn btn-danger btn-sm" data-action="reject" data-queue-id="{{ r.id }}">✕ Reject</button>
+                  {% elif r.status == "waiting" %}
+                    <button class="btn btn-primary btn-sm" data-action="start" data-queue-id="{{ r.id }}">▶ Start Session</button>
+                    <button class="btn btn-danger btn-sm" data-action="reject" data-queue-id="{{ r.id }}">✕ Cancel</button>
+                  {% elif r.status == "ongoing" %}
+                    <button class="btn btn-success btn-sm" data-action="done" data-queue-id="{{ r.id }}">✓ Next Client</button>
+                    <button class="btn btn-danger btn-sm" data-action="noshow" data-queue-id="{{ r.id }}">⚠ No-Show</button>
+                  {% endif %}
+                </div>
+                {% if r.status in ("pending", "waiting", "ongoing") %}
+                <div class="rate-client-row" data-queue-id="{{ r.id }}" style="padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span class="muted" style="font-size:.78rem">⭐ Rate Client:</span>
+                  <div class="star-rating star-rating-inline" data-queue-id="{{ r.id }}">
+                    {% for i in [5,4,3,2,1] %}
+                      <input type="radio" name="rate-{{ r.id }}" id="rate-{{ r.id }}-{{ i }}" value="{{ i }}">
+                      <label for="rate-{{ r.id }}-{{ i }}" style="font-size:1.2rem">★</label>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-state-icon">✂️</div>
+              <h3>Queue is clear</h3>
+              <p>No active bookings right now.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Analytics Charts -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Peak Hours</span></div>
+          <div class="chart-container">
+            <canvas id="peak-hours-chart" data-peak='{{ peak_hours | tojson }}'></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Revenue (7 Days)</span></div>
+          <div class="chart-container">
+            <canvas id="revenue-chart" data-revenue='{{ revenue_days | tojson }}'></canvas>
+          </div>
+        </div>
+      </div>
+
+        </div><!-- /tab-queue -->
+
+        <!-- TAB: WALK-INS -->
+        <div class="dash-panel" id="tab-walkin">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">⚡ Walk-in Queue</span>
+              <span class="live-dot" style="font-size:.75rem">Live</span>
+            </div>
+            <div id="walkin-live-list">
+              <div class="empty-state"><div class="empty-state-icon">🚶</div><h3>No walk-ins yet</h3><p>Clients scan your QR code to appear here.</p></div>
+            </div>
+          </div>
+        </div><!-- /tab-walkin -->
+
+        <!-- TAB: CLIENTS -->
+        <div class="dash-panel" id="tab-clients">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">👥 All Clients</span>
+              <input type="text" id="client-search" placeholder="Search..." class="form-control" style="width:140px;padding:5px 10px;font-size:.8rem">
+            </div>
+            <div id="clients-list-container">
+              <div class="empty-state"><p>Loading...</p></div>
+            </div>
+          </div>
+        </div><!-- /tab-clients -->
+
+        <!-- TAB: GALLERY -->
+        <div class="dash-panel" id="tab-gallery">
+          <div class="card">
+            <div class="card-header"><span class="card-title">📸 Portfolio Gallery</span></div>
+
+            <!-- Current photos -->
+            {% set photos = [] %}
+            {% for p in gallery_photos %}
+              {% set _ = photos.append(p) %}
+            {% endfor %}
+            {% if gallery_photos %}
+              <div class="gallery-manage-grid" style="margin-bottom:16px">
+                {% for p in gallery_photos %}
+                  <div class="gallery-manage-item">
+                    <img src="{{ p.image_url }}" alt="{{ p.caption or '' }}" loading="lazy">
+                    <form method="post" action="{{ url_for('manage_gallery') }}" style="margin:0">
+                      <input type="hidden" name="action" value="delete">
+                      <input type="hidden" name="photo_id" value="{{ p.id }}">
+                      <button type="submit" class="gallery-manage-del" onclick="return confirm('Delete?')">✕</button>
+                    </form>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="muted" style="font-size:.82rem;text-align:center;padding:12px 0;margin-bottom:12px">No photos yet — add your first cut photo below.</p>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <!-- Upload file -->
+            <form method="post" action="{{ url_for('manage_gallery') }}" enctype="multipart/form-data" class="stack stack-md" style="margin-bottom:16px">
+              <input type="hidden" name="action" value="upload">
+              <div class="form-group">
+                <label class="form-label">📁 Upload Photo (JPG/PNG/WEBP, max 5MB)</label>
+                <input name="image_file" type="file" accept="image/*" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Caption (optional)</label>
+                <input name="caption" type="text" class="form-control" placeholder="ex: Fade + Beard">
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Upload</button>
+            </form>
+
+            <div class="divider"></div>
+
+            <!-- Add by URL -->
+            <form method="post" action="{{ url_for('manage_gallery') }}" class="stack stack-md">
+              <input type="hidden" name="action" value="add_url">
+              <div class="form-group">
+                <label class="form-label">🔗 Image URL (Instagram, Google Photos, etc.)</label>
+                <input name="image_url" type="url" class="form-control" placeholder="https://..." required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Caption (optional)</label>
+                <input name="caption" type="text" class="form-control" placeholder="ex: Skin Fade">
+              </div>
+              <button type="submit" class="btn btn-secondary btn-sm">Add URL</button>
+            </form>
+          </div>
+        </div><!-- /tab-gallery -->
+
+      </div><!-- /tabs wrapper -->
+
+    </div><!-- /MAIN COLUMN -->
+
+    <!-- SIDEBAR -->
+    <div class="dashboard-sidebar">
+
+      <!-- Services Manager -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Services</span></div>
+        <div class="stack stack-sm" style="margin-bottom:16px">
+          {% if services %}
+            {% for s in services %}
+              <div class="service-manage-row">
+                <div class="service-manage-info">
+                  <div class="service-manage-name">{{ s.name }}</div>
+                  <div class="service-manage-meta">{{ "%.0f"|format(s.price) }} MAD · {{ s.duration }} min</div>
+                </div>
+                <form method="post" action="{{ url_for('manage_services') }}" style="margin:0">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="service_id" value="{{ s.id }}">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Remove this service?')">✕</button>
+                </form>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="muted" style="font-size:.83rem;text-align:center;padding:8px">No services yet.</p>
+          {% endif %}
+        </div>
+        <div class="divider"></div>
+        <form method="post" action="{{ url_for('manage_services') }}" class="stack stack-md">
+          <input type="hidden" name="action" value="add">
+          <div class="form-group">
+            <label class="form-label">Service Name</label>
+            <input name="name" type="text" class="form-control" placeholder="e.g. Fade Cut" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Price (MAD)</label>
+              <input name="price" type="number" min="0" step="0.5" class="form-control" placeholder="60" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duration (min)</label>
+              <input name="duration" type="number" min="5" max="180" class="form-control" placeholder="30" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-secondary">+ Add Service</button>
+        </form>
+      </div>
+
+      <!-- Shop Info -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Shop Info</span></div>
+        <div class="stack stack-sm" style="font-size:.85rem">
+          <div class="queue-detail-row">
+            <span style="color:var(--text-muted)">Working Hours</span>
+            <span>{{ barber.open_time or "09:00" }} – {{ barber.close_time or "20:00" }}</span>
+          </div>
+          <div class="queue-detail-row">
+            <span style="color:var(--text-muted)">Tahssina Favor</span>
+            <span class="gold-text">
+              {% if barber.favor_service_name %}🎁 {{ barber.favor_service_name }}{% else %}Not set{% endif %}
+            </span>
+          </div>
+          <div class="queue-detail-row">
+            <span style="color:var(--text-muted)">Services</span>
+            <span>{{ services|length }}</span>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <a href="https://www.google.com/maps/search/?api=1&query={{ barber.address|urlencode }}"
+             target="_blank" class="map-btn map-btn-gmaps" style="display:inline-flex;width:100%;justify-content:center">
+            📍 View on Maps
+          </a>
+        </div>
+      </div>
+
+      <!-- Shop Settings -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Shop Settings</span></div>
+        <form method="post" action="{{ url_for('barber_update_settings') }}" class="stack stack-md">
+          <div class="form-group">
+            <label class="form-label">Opening Time</label>
+            <input name="open_time" type="time" class="form-control"
+                   value="{{ barber.open_time or '09:00' }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Closing Time</label>
+            <input name="close_time" type="time" class="form-control"
+                   value="{{ barber.close_time or '20:00' }}" required>
+          </div>
+          <div class="divider" style="margin-block:4px"></div>
+          <div class="form-group">
+            <label class="form-label">🎁 Tahsina Favor Service</label>
+            <select name="favor_service_id" class="form-control">
+              <option value="">-- Free service not set --</option>
+              {% for s in services %}
+                <option value="{{ s.id }}"
+                  {% if barber.favor_service_id == s.id %}selected{% endif %}>
+                  {{ s.name }} ({{ "%.0f"|format(s.price) }} MAD)
+                </option>
+              {% endfor %}
+            </select>
+            <span class="form-hint">This service will be offered FREE when a client earns 10 stamps.</span>
+          </div>
+          <div class="divider" style="margin-block:4px"></div>
+          <div class="form-group">
+            <label class="form-label">📋 Max Clients Per Day</label>
+            <input name="max_daily_clients" type="number" min="0" max="200" class="form-control"
+                   value="{{ barber.max_daily_clients or 0 }}" placeholder="0 = unlimited">
+            <span class="form-hint">When this limit is reached, the day shows as <strong>Fully Booked</strong>. Clients can join a waitlist and are notified by email if a slot opens. Set to 0 for unlimited.</span>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+        </form>
+      </div>
+
+      <!-- Closed Days -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🚫 Closed Days</span></div>
+        <p class="form-hint" style="margin-bottom:14px">Mark any specific date as closed — clients will see it grayed out and cannot book on those days.</p>
+
+        {% if closed_dates_list %}
+          <div class="stack stack-sm" style="margin-bottom:16px">
+            {% for cd in closed_dates_list %}
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:rgba(224,80,80,.06);border:1px solid rgba(224,80,80,.18);border-radius:var(--radius-sm)">
+                <div>
+                  <div style="font-weight:600;font-size:.85rem">{{ cd.closed_date }}</div>
+                  {% if cd.reason %}
+                    <div style="font-size:.75rem;color:var(--text-muted)">{{ cd.reason }}</div>
+                  {% endif %}
+                </div>
+                <form method="post" action="{{ url_for('manage_closed_dates') }}" style="margin:0">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="closed_id" value="{{ cd.id }}">
+                  <button type="submit" class="btn btn-secondary btn-sm" title="Reopen this day">↺ Reopen</button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="muted" style="font-size:.82rem;text-align:center;padding:10px 0;margin-bottom:14px">No closed days configured yet.</p>
+        {% endif %}
+
+        <div class="divider"></div>
+
+        <form method="post" action="{{ url_for('manage_closed_dates') }}" class="stack stack-md">
+          <input type="hidden" name="action" value="add">
+          <div class="form-group">
+            <label class="form-label">Select Date</label>
+            <input name="closed_date" type="date" class="form-control" min="{{ today_str }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sabab (ikhtiyari)</label>
+            <input name="reason" type="text" class="form-control" placeholder="ex: 3otla, jaw3a aila...">
+            <span class="form-hint">This reason will be shown to clients who try to book on this date.</span>
+          </div>
+          <button type="submit" class="btn btn-danger btn-sm">🚫 Sker Had Nhar</button>
+        </form>
+      </div>
+
+      <!-- Client History Panel -->
+      <div class="card" id="client-history-panel" style="display:none">
+        <div class="card-header">
+          <span class="card-title" id="history-panel-title">Client History</span>
+          <button onclick="closeHistoryPanel()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem">✕</button>
+        </div>
+        <div id="history-panel-content">
+          <div class="empty-state"><p>Loading...</p></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function openHistoryPanel(clientId, clientName) {
+  const panel = document.getElementById('client-history-panel');
+  const title = document.getElementById('history-panel-title');
+  const content = document.getElementById('history-panel-content');
+  title.textContent = clientName + ' — History';
+  content.innerHTML = '<div class="empty-state"><p>Loading...</p></div>';
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  fetch('/barber/client-history-json/' + clientId)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) { content.innerHTML = '<p class="muted" style="padding:12px">Error loading history.</p>'; return; }
+      let html = '';
+      // Stats
+      html += '<div class="stats-grid" style="margin-bottom:14px">';
+      html += '<div class="stat-card"><div class="stat-label">Visits</div><div class="stat-value" style="font-size:1.3rem">' + data.visit_count + '</div></div>';
+      html += '<div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-value" style="font-size:1.3rem">' + parseFloat(data.total_spent).toFixed(0) + '<span class="stat-unit">MAD</span></div></div>';
+      if (data.loyalty) {
+        html += '<div class="stat-card"><div class="stat-label">Stamps</div><div class="stat-value" style="font-size:1.3rem">' + data.loyalty.stamps + '/10</div></div>';
+        html += '<div class="stat-card"><div class="stat-label">Favors</div><div class="stat-value" style="font-size:1.3rem">' + data.loyalty.total_earned + '</div></div>';
+      }
+      html += '</div>';
+      // Contact
+      html += '<div style="padding:10px 12px;background:var(--bg-input);border-radius:var(--radius-sm);margin-bottom:12px;font-size:.82rem">';
+      html += '📞 ' + escHtml(data.client.phone) + '<br>✉️ ' + escHtml(data.client.email);
+      if (data.client.no_show_count > 0) html += '<br><span style="color:var(--red)">⚠️ ' + data.client.no_show_count + ' no-show(s)</span>';
+      html += '</div>';
+      // Visits
+      if (data.visits.length) {
+        html += '<div class="stack stack-sm">';
+        data.visits.forEach(v => {
+          html += '<div style="padding:10px;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border)">';
+          html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+          html += '<div><div style="font-size:.82rem;font-weight:600">' + v.appointment_time + '</div>';
+          if (v.services_list) html += '<div style="font-size:.75rem;color:var(--text-muted)">' + escHtml(v.services_list) + '</div>';
+          if (v.loyalty_reward) html += '<span class="loyalty-badge" style="font-size:.68rem;margin-top:4px;display:inline-flex">🏆 Favor</span>';
+          html += '</div>';
+          html += '<div style="text-align:right"><div style="color:var(--gold);font-weight:700;font-size:.88rem">' + parseFloat(v.total_price).toFixed(0) + ' MAD</div>';
+          html += '<span class="badge badge-' + v.status + '" style="font-size:.65rem">' + v.status + '</span></div>';
+          html += '</div></div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<p class="muted" style="text-align:center;padding:16px;font-size:.83rem">No completed visits yet.</p>';
+      }
+      content.innerHTML = html;
+    })
+    .catch(() => { content.innerHTML = '<p class="muted" style="padding:12px">Failed to load.</p>'; });
+}
+
+function closeHistoryPanel() {
+  document.getElementById('client-history-panel').style.display = 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Explore Barbers — Tahssina{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>Barbers Near You</h1>
+    <p>Choose a salon and book your slot in under a minute.</p>
+  </div>
+  {% if barbers %}
+    <div class="barbers-grid">
+      {% for b in barbers %}
+        <div class="barber-card">
+          <div class="barber-card-body">
+            <div class="barber-top">
+              <div>
+                <div class="barber-name">{{ b.salon_name }}</div>
+                <div class="barber-owner">by {{ b.username }}</div>
+              </div>
+              {% if not b.is_open %}
+                <span class="badge badge-closed">● Closed</span>
+              {% elif today_full.get(b.id) %}
+                <span class="badge badge-full">📋 Fully Booked Today</span>
+              {% else %}
+                <span class="badge badge-open">● Open</span>
+              {% endif %}
+            </div>
+            <div class="barber-address">
+              <span>📍</span>
+              <span>{{ b.address }}</span>
+            </div>
+            <div class="barber-address" style="margin-top:-8px">
+              <span>📞</span>
+              <span>{{ b.phone }}</span>
+            </div>
+            {% if b.review_count > 0 %}
+              <div class="cluster" style="gap:6px;margin-bottom:12px">
+                <span class="stars">
+                  {% for i in range(1,6) %}{% if i <= b.avg_rating|round %}★{% else %}☆{% endif %}{% endfor %}
+                </span>
+                <span class="review-count">({{ b.review_count }} review{{ "s" if b.review_count != 1 }})</span>
+              </div>
+            {% endif %}
+            {% if b.min_price > 0 %}
+              <div class="barber-price">{{ "%.0f"|format(b.min_price) }}–{{ "%.0f"|format(b.max_price) }} MAD</div>
+            {% endif %}
+          </div>
+          <div class="barber-card-footer">
+            {% if not b.is_open %}
+              <span class="muted" style="font-size:.83rem">Currently closed</span>
+            {% elif today_full.get(b.id) %}
+              <a href="{{ url_for('book', barber_id=b.id) }}" class="btn btn-waitlist btn-sm">📋 Join Waitlist</a>
+            {% else %}
+              <a href="{{ url_for('book', barber_id=b.id) }}" class="btn btn-primary btn-sm">Book Slot →</a>
+            {% endif %}
+            <a href="{{ url_for('barber_qr_page', barber_id=b.id) }}" class="btn btn-secondary btn-sm">📸 Portfolio</a>
+            <a href="https://www.google.com/maps/search/?api=1&query={{ b.address|urlencode }}"
+               target="_blank" class="map-btn map-btn-gmaps" style="font-size:.78rem;padding:6px 12px">
+              📍 Directions
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state" style="margin-top:60px">
+      <div class="empty-state-icon">✂️</div>
+      <h3>No barbers registered yet</h3>
+      <p>Check back soon — salons are joining every day.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
