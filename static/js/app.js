@@ -814,6 +814,7 @@ const _origInitDash = window.initBarberDashboard;
 
 
 
+
 // ═══════════════════════════════════════════════════════════════════════
 //  BURGER MENU
 //  Zid had function f app.js dyalk, w zidha f DOMContentLoaded
@@ -854,3 +855,17 @@ function initBurgerMenu() {
 //   ...
 //   initBurgerMenu();   // <== ZID HAD LSATOUR
 // });
+
+document.addEventListener('DOMContentLoaded', () => {
+  initFlashMessages();
+  initRoleToggle();
+  initBookingCalculator();
+  initDateTimePicker();
+  initProgressRing();
+  initWaitDisplay();
+  initClientTrackSSE();
+  initBarberDashboard();
+  initRateBarberWidget();
+  initCharts();
+  initBurgerMenu(); // ← ZID HAD LSATOUR
+});
