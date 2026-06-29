@@ -131,44 +131,76 @@
 </div>
 
 <style>
-/* ── Booking layout — mobile first ── */
+/* ═══════════════════════════════════════════════
+   BOOKING PAGE — Mobile-First Responsive CSS
+   ═══════════════════════════════════════════════ */
+
+/* ── Layout ─────────────────────────────────── */
 .booking-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-  padding-block: 20px;
+  padding-block: 16px;
 }
 
 .booking-right .price-summary {
   position: static;
 }
 
-/* Services */
-.service-item  { padding: 12px; gap: 10px; }
-.service-name  { font-size: .88rem; }
-.service-meta  { font-size: .75rem; }
+/* ── Services list ──────────────────────────── */
+.service-item {
+  padding: 14px 12px;
+  gap: 10px;
+  /* Minimum 44px touch target */
+  min-height: 44px;
+}
+.service-name  { font-size: .9rem; }
+.service-meta  { font-size: .76rem; }
 .service-price { font-size: .88rem; white-space: nowrap; }
 
-/* ── Time slots: 2 colonnes sur mobile ── */
+/* ── Date pills ─────────────────────────────── */
+.date-pills-row {
+  /* Hide scrollbar on mobile but keep scroll */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.date-pills-row::-webkit-scrollbar { display: none; }
+
+/* ── Time slots — 2 cols on mobile ─────────── */
 .time-slots-list {
   display: grid !important;
   flex-direction: unset !important;
   flex-wrap: unset !important;
   grid-template-columns: repeat(2, 1fr) !important;
-  gap: 8px;
+  gap: 8px !important;
 }
+
 .time-slot-btn {
   width: 100% !important;
   text-align: center !important;
-  padding: 13px 6px !important;
-  font-size: .84rem !important;
-}
-.time-slot-taken {
+  /* Min 44px touch target */
+  min-height: 44px !important;
   padding: 10px 6px !important;
-  font-size: .8rem !important;
+  font-size: .83rem !important;
+  line-height: 1.2 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-/* ── Map buttons: toujours side-by-side ── */
+.time-slot-taken {
+  min-height: 44px !important;
+  padding: 8px 6px !important;
+  font-size: .78rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ── Map buttons — always side-by-side ──────── */
 .map-actions {
   display: flex !important;
   flex-direction: row !important;
@@ -179,43 +211,75 @@
   flex: 1 1 auto !important;
   width: auto !important;
   min-width: 0 !important;
-  text-align: center;
-  justify-content: center;
+  text-align: center !important;
+  justify-content: center !important;
+  /* Touch target */
+  min-height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
 }
 
-/* ── Summary: compact sur mobile ── */
+/* ── Summary card ───────────────────────────── */
 .price-summary {
   padding: 16px !important;
 }
 .price-total-value {
-  font-size: 1.2rem !important;
+  font-size: 1.25rem !important;
 }
 
-/* Tablet 600px+ */
+/* Submit button — larger touch area on mobile */
+#booking-submit {
+  min-height: 48px !important;
+  font-size: .95rem !important;
+}
+
+/* ── Tablet: 600px+ ─────────────────────────── */
 @media (min-width: 600px) {
-  .time-slots-list { grid-template-columns: repeat(3, 1fr) !important; }
   .booking-layout  { gap: 20px; }
+  .time-slots-list { grid-template-columns: repeat(3, 1fr) !important; }
+  .service-item    { padding: 14px 16px; }
 }
 
-/* Desktop 900px+ */
+/* ── Desktop: 900px+ ────────────────────────── */
 @media (min-width: 900px) {
   .booking-layout {
     grid-template-columns: 1fr 340px;
     gap: 24px;
     align-items: start;
+    padding-block: 24px;
   }
   .booking-right .price-summary {
     position: sticky;
     top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
   }
+  /* Show scrollbar again on desktop */
+  .date-pills-row {
+    -ms-overflow-style: auto;
+    scrollbar-width: thin;
+  }
+  .date-pills-row::-webkit-scrollbar { display: block; height: 4px; }
   .time-slots-list { grid-template-columns: repeat(3, 1fr) !important; }
+  .time-slot-btn   { min-height: 52px !important; font-size: .88rem !important; }
   .price-total-value { font-size: 1.5rem !important; }
+  .price-summary   { padding: 20px !important; }
 }
 
-/* Large 1280px+ */
+/* ── Large: 1280px+ ─────────────────────────── */
 @media (min-width: 1280px) {
   .booking-layout  { grid-template-columns: 1fr 380px; gap: 32px; }
   .time-slots-list { grid-template-columns: repeat(4, 1fr) !important; }
+}
+
+/* ── Very small phones: 360px and below ─────── */
+@media (max-width: 360px) {
+  .booking-layout  { padding-inline: 0; }
+  .service-item    { padding: 12px 10px; }
+  .time-slots-list { gap: 6px !important; }
+  .time-slot-btn   { font-size: .75rem !important; padding: 8px 4px !important; }
+  .price-summary   { padding: 14px !important; }
+  .date-pills-row  { gap: 6px; }
 }
 </style>
 {% endblock %}
