@@ -40,6 +40,7 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 a { color: var(--gold); text-decoration: none; transition: opacity var(--transition); }
@@ -71,6 +72,9 @@ h1, h2, h3, h4 {
   max-width: 1200px;
   margin-inline: auto;
   padding-inline: 16px;
+  /* Prevent content from breaking out on mobile */
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .stack { display: flex; flex-direction: column; }
@@ -1347,24 +1351,31 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .btn-waitlist:hover { background: rgba(212,175,55,.22); }
 
 .time-slots-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 }
 
 .time-slot-btn {
   width: 100%;
-  text-align: left;
-  padding: 14px 18px;
+  text-align: center;
+  padding: 12px 6px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
   background: var(--bg-input);
   color: var(--text-primary);
-  font-size: .92rem;
+  font-size: .88rem;
   font-weight: 600;
   font-family: var(--font-body);
   cursor: pointer;
   transition: all var(--transition);
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .time-slot-btn:hover { border-color: rgba(212,175,55,.4); background: #2a2a2a; }
@@ -1407,16 +1418,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 /* Tablet */
 @media (min-width: 768px) and (max-width: 1279px) {
   .barbers-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-  .booking-layout { grid-template-columns: 1fr 340px; gap: 24px; }
-  .time-slots-list { flex-direction: row; flex-wrap: wrap; }
-  .time-slot-btn { width: calc(33.33% - 8px); }
+  /* booking-layout + time-slots-list: managed by book.html inline CSS */
 }
 
-/* Better time slot grid on desktop */
-@media (min-width: 640px) {
-  .time-slots-list { flex-direction: row; flex-wrap: wrap; }
-  .time-slot-btn { width: calc(25% - 8px); text-align: center; padding: 12px 8px; }
-}
+/* Desktop time slots: managed by book.html inline CSS */
+@media (min-width: 640px) {}
 
 /* Larger touch targets on TV/big screens */
 @media (min-width: 1920px) {
