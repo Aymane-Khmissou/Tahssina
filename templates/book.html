@@ -2,24 +2,34 @@
 {% block title %}Book at {{ barber.salon_name }} — Tahssina{% endblock %}
 {% block content %}
 <div class="container">
+
+  <!-- Page Header -->
   <div class="page-header">
-    <div class="cluster cluster-between">
+    <div class="cluster cluster-between" style="flex-wrap:wrap;gap:10px">
       <div>
-        <h1>{{ barber.salon_name }}</h1>
+        <h1 style="font-size:clamp(1.2rem,4vw,1.8rem)">{{ barber.salon_name }}</h1>
         <p>Select services and pick your time slot.</p>
       </div>
       <span class="badge badge-open">● Open</span>
     </div>
   </div>
+
   <form method="post" action="{{ url_for('book_submit') }}" id="booking-form"
         data-open-time="{{ barber.open_time or '09:00' }}"
         data-close-time="{{ barber.close_time or '20:00' }}"
         data-closed-dates='{{ closed_dates | tojson }}'>
     <input type="hidden" name="barber_id" value="{{ barber.id }}">
+
     <div class="booking-layout">
-      <div>
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-header"><span class="card-title">Choose Services</span></div>
+
+      <!-- LEFT COLUMN -->
+      <div class="booking-left">
+
+        <!-- Services -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <span class="card-title">Choose Services</span>
+          </div>
           {% if services %}
             <div class="services-list">
               {% for s in services %}
@@ -41,19 +51,20 @@
             <div class="empty-state"><p>No services configured yet.</p></div>
           {% endif %}
         </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Pick Date & Time</span></div>
 
-          <!-- Date Pills -->
+        <!-- Date & Time -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Pick Date & Time</span>
+          </div>
+
           <div id="date-pills-row" class="date-pills-row"></div>
 
-          <!-- Time Slots -->
-          <div style="margin-top:20px">
+          <div style="margin-top:18px">
             <div class="form-label" style="margin-bottom:10px">Pick a time</div>
             <div id="time-slots-list" class="time-slots-list"></div>
           </div>
 
-          <!-- Closed-day message -->
           <div id="closed-day-msg" class="closed-day-banner" style="display:none"></div>
 
           <input type="hidden" id="appointment_time" name="appointment_time" required>
@@ -62,13 +73,18 @@
             Slots checked automatically for overlaps.
           </span>
         </div>
-      </div>
-      <div>
+
+      </div><!-- /booking-left -->
+
+      <!-- RIGHT COLUMN — Summary (moves to bottom on mobile) -->
+      <div class="booking-right">
         <div class="price-summary">
           <div class="card-title" style="margin-bottom:14px">Booking Summary</div>
+
           <div style="min-height:48px" id="price-line-items">
             <p class="muted" style="font-size:.82rem">Select services to see breakdown</p>
           </div>
+
           <div class="price-total-row">
             <span class="price-total-label">Total</span>
             <span class="price-total-value" id="price-total">0.00 MAD</span>
@@ -77,13 +93,16 @@
             <span class="price-total-label">Duration</span>
             <span style="font-size:.9rem;color:var(--text-muted)" id="duration-total">--</span>
           </div>
+
           <div class="divider"></div>
+
+          <!-- Location card -->
           <div class="card" style="background:rgba(212,175,55,.05);border-color:rgba(212,175,55,.2);margin-bottom:16px;padding:12px">
             <div style="display:flex;align-items:flex-start;gap:8px">
               <span style="font-size:1.1rem">📍</span>
-              <div>
+              <div style="flex:1;min-width:0">
                 <div style="font-size:.82rem;font-weight:600;margin-bottom:4px">{{ barber.salon_name }}</div>
-                <div class="muted" style="font-size:.78rem">{{ barber.address }}</div>
+                <div class="muted" style="font-size:.78rem;word-break:break-word">{{ barber.address }}</div>
                 <div class="map-actions" style="margin-top:8px">
                   <a href="https://www.google.com/maps/search/?api=1&query={{ barber.address|urlencode }}"
                      target="_blank" class="map-btn map-btn-gmaps" style="font-size:.75rem;padding:5px 10px">
@@ -97,6 +116,7 @@
               </div>
             </div>
           </div>
+
           <button id="booking-submit" type="submit" class="btn btn-primary btn-full" disabled>
             Request Queue Slot
           </button>
@@ -104,8 +124,77 @@
             One active booking per day. Auto-confirmed if no conflicts.
           </p>
         </div>
-      </div>
-    </div>
+      </div><!-- /booking-right -->
+
+    </div><!-- /booking-layout -->
   </form>
 </div>
+
+<style>
+/* ── Booking layout — mobile first ── */
+.booking-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding-block: 20px;
+}
+
+.booking-right .price-summary {
+  position: static; /* mobile: normal flow */
+}
+
+/* Services: full width, readable on small screens */
+.service-item {
+  padding: 12px;
+  gap: 10px;
+}
+.service-name  { font-size: .88rem; }
+.service-meta  { font-size: .75rem; }
+.service-price { font-size: .88rem; white-space: nowrap; }
+
+/* Time slots: 2 columns on mobile */
+.time-slots-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.time-slot-btn {
+  width: 100%;
+  text-align: center;
+  padding: 12px 6px;
+  font-size: .82rem;
+}
+
+/* Map buttons stacked on small mobile */
+@media (max-width: 400px) {
+  .map-actions { flex-direction: column; }
+  .map-btn { width: 100%; justify-content: center; }
+}
+
+/* Tablet (640px+): 3 cols for time slots */
+@media (min-width: 640px) {
+  .time-slots-list { grid-template-columns: repeat(3, 1fr); }
+  .booking-layout  { gap: 20px; }
+}
+
+/* Desktop (900px+): side-by-side layout */
+@media (min-width: 900px) {
+  .booking-layout {
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+  .booking-right .price-summary {
+    position: sticky;
+    top: 80px;
+  }
+  .time-slots-list { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Large desktop (1280px+) */
+@media (min-width: 1280px) {
+  .booking-layout  { grid-template-columns: 1fr 380px; gap: 32px; }
+  .time-slots-list { grid-template-columns: repeat(4, 1fr); }
+}
+</style>
 {% endblock %}
