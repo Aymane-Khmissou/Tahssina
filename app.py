@@ -20,6 +20,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, jsonify, Response, g, flash, send_from_directory)
+from flask import send_file, abort
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
@@ -1668,6 +1669,27 @@ def barber_clients():
 init_db()
 _email_thread = threading.Thread(target=email_worker, daemon=True)
 _email_thread.start()
+
+@app.route('/admin/list-files')
+def list_files():
+    try:
+        files = os.listdir('/app/data')
+        return {"files_in_volume": files}
+    except Exception as e:
+        return f"Error listing files: {str(e)}"
+
+# Route 2: Kat-downloadi biha b l-ism d l-file direct mn browser
+@app.route('/admin/download/tahssina.db')
+def download_file(filename):
+    try:
+        # Sécurité bach t-eviter path traversal
+        if ".." in filename or filename.startswith("/"):
+            abort(400)
+            
+        file_path = os.path.join('/app/data', filename)
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return f"Error downloading file: {str(e)}"
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True, port=5000)
