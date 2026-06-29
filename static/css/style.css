@@ -1476,3 +1476,84 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   text-transform: uppercase;
   margin-top: 2px;
 }
+
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BURGER MENU — Mobile Navbar
+   Zid had CSS f akhir style.css dyalk
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--transition);
+  flex-shrink: 0;
+}
+.burger:hover { border-color: rgba(212,175,55,.4); }
+
+.burger span {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all .25s ease;
+}
+
+.burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.burger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+.nav-drawer {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px 14px;
+  background: rgba(18,18,18,.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-drawer.open { display: flex; }
+
+.nav-drawer a {
+  color: var(--text-muted);
+  font-size: .92rem;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: color var(--transition), background var(--transition);
+  font-family: var(--font-body);
+}
+.nav-drawer a:hover { color: var(--text-primary); background: var(--bg-hover); opacity: 1; }
+.nav-drawer a.active { color: var(--gold); }
+
+.drawer-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+}
+.drawer-signout { color: var(--text-muted) !important; font-size: .85rem !important; }
+.drawer-register {
+  margin-top: 6px;
+  background: var(--gold) !important;
+  color: #121212 !important;
+  font-weight: 700;
+  text-align: center;
+}
+.drawer-register:hover { background: #c9a82e !important; color: #121212 !important; }
+
+@media (max-width: 700px) {
+  .nav-links { display: none; }
+  .burger    { display: flex; }
+}
