@@ -1670,6 +1670,7 @@ init_db()
 _email_thread = threading.Thread(target=email_worker, daemon=True)
 _email_thread.start()
 
+# Route 1: Kat-lister chno kayn f volume
 @app.route('/admin/list-files')
 def list_files():
     try:
@@ -1678,15 +1679,13 @@ def list_files():
     except Exception as e:
         return f"Error listing files: {str(e)}"
 
-# Route 2: Kat-downloadi biha b l-ism d l-file direct mn browser
+# Route 2: Kat-downloadi biha tahssina.db direct
 @app.route('/admin/download/tahssina.db')
-def download_file(filename):
+def download_file():
     try:
-        # Sécurité bach t-eviter path traversal
-        if ".." in filename or filename.startswith("/"):
-            abort(400)
-            
-        file_path = os.path.join('/app/data', filename)
+        file_path = '/app/data/tahssina.db'
+        if not os.path.exists(file_path):
+            return "Error: Le fichier tahssina.db introuvable!"
         return send_file(file_path, as_attachment=True)
     except Exception as e:
         return f"Error downloading file: {str(e)}"
