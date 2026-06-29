@@ -140,44 +140,64 @@
 }
 
 .booking-right .price-summary {
-  position: static; /* mobile: normal flow */
+  position: static;
 }
 
-/* Services: full width, readable on small screens */
-.service-item {
-  padding: 12px;
-  gap: 10px;
-}
+/* Services */
+.service-item  { padding: 12px; gap: 10px; }
 .service-name  { font-size: .88rem; }
 .service-meta  { font-size: .75rem; }
 .service-price { font-size: .88rem; white-space: nowrap; }
 
-/* Time slots: 2 columns on mobile */
+/* ── Time slots: 2 colonnes sur mobile ── */
 .time-slots-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: grid !important;
+  flex-direction: unset !important;
+  flex-wrap: unset !important;
+  grid-template-columns: repeat(2, 1fr) !important;
   gap: 8px;
 }
 .time-slot-btn {
-  width: 100%;
+  width: 100% !important;
+  text-align: center !important;
+  padding: 13px 6px !important;
+  font-size: .84rem !important;
+}
+.time-slot-taken {
+  padding: 10px 6px !important;
+  font-size: .8rem !important;
+}
+
+/* ── Map buttons: toujours side-by-side ── */
+.map-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 8px !important;
+}
+.map-btn {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
   text-align: center;
-  padding: 12px 6px;
-  font-size: .82rem;
+  justify-content: center;
 }
 
-/* Map buttons stacked on small mobile */
-@media (max-width: 400px) {
-  .map-actions { flex-direction: column; }
-  .map-btn { width: 100%; justify-content: center; }
+/* ── Summary: compact sur mobile ── */
+.price-summary {
+  padding: 16px !important;
+}
+.price-total-value {
+  font-size: 1.2rem !important;
 }
 
-/* Tablet (640px+): 3 cols for time slots */
-@media (min-width: 640px) {
-  .time-slots-list { grid-template-columns: repeat(3, 1fr); }
+/* Tablet 600px+ */
+@media (min-width: 600px) {
+  .time-slots-list { grid-template-columns: repeat(3, 1fr) !important; }
   .booking-layout  { gap: 20px; }
 }
 
-/* Desktop (900px+): side-by-side layout */
+/* Desktop 900px+ */
 @media (min-width: 900px) {
   .booking-layout {
     grid-template-columns: 1fr 340px;
@@ -188,13 +208,14 @@
     position: sticky;
     top: 80px;
   }
-  .time-slots-list { grid-template-columns: repeat(3, 1fr); }
+  .time-slots-list { grid-template-columns: repeat(3, 1fr) !important; }
+  .price-total-value { font-size: 1.5rem !important; }
 }
 
-/* Large desktop (1280px+) */
+/* Large 1280px+ */
 @media (min-width: 1280px) {
   .booking-layout  { grid-template-columns: 1fr 380px; gap: 32px; }
-  .time-slots-list { grid-template-columns: repeat(4, 1fr); }
+  .time-slots-list { grid-template-columns: repeat(4, 1fr) !important; }
 }
 </style>
 {% endblock %}
