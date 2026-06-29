@@ -21,6 +21,7 @@ from email.mime.multipart import MIMEMultipart
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, jsonify, Response, g, flash, send_from_directory)
 from flask import send_file, abort
+from flask import request
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
@@ -1689,6 +1690,23 @@ def download_file():
         return send_file(file_path, as_attachment=True)
     except Exception as e:
         return f"Error downloading file: {str(e)}"
+
+
+
+@app.route('/admin/upload-db', methods=['POST'])
+def upload_db():
+    try:
+        # T-t2ked bli l-file "db_file" t-sift f l-request
+        file = request.files.get('db_file')
+        if not file:
+            return "Error: No file uploaded"
+        
+        # Save-i l-file f blastek f l-production volume
+        file.save('/app/data/tahssina.db')
+        return "Database updated successfully! Restart the app on Railway to take effect."
+    except Exception as e:
+        return f"Error: {str(e)}"
+        
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True, port=5000)
