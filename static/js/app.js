@@ -811,3 +811,46 @@ const _walkinSSEHandler = (e) => {
 
 // Attach to any existing SSE source when dashboard loads
 const _origInitDash = window.initBarberDashboard;
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  BURGER MENU
+//  Zid had function f app.js dyalk, w zidha f DOMContentLoaded
+// ═══════════════════════════════════════════════════════════════════════
+function initBurgerMenu() {
+  const burger = document.getElementById('burger');
+  const drawer = document.getElementById('nav-drawer');
+  if (!burger || !drawer) return;
+
+  burger.addEventListener('click', () => {
+    const isOpen = drawer.classList.toggle('open');
+    burger.classList.toggle('open', isOpen);
+    burger.setAttribute('aria-expanded', isOpen);
+    drawer.setAttribute('aria-hidden', !isOpen);
+  });
+
+  drawer.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      drawer.classList.remove('open');
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+      drawer.setAttribute('aria-hidden', 'true');
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!burger.contains(e.target) && !drawer.contains(e.target)) {
+      drawer.classList.remove('open');
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+  });
+}
+
+// => Zid initBurgerMenu() f DOMContentLoaded dyalk:
+// document.addEventListener('DOMContentLoaded', () => {
+//   ...
+//   initBurgerMenu();   // <== ZID HAD LSATOUR
+// });
