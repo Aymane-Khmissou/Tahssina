@@ -1085,6 +1085,11 @@ def edit_profile():
     db   = get_db()
     user = db.execute("SELECT * FROM users WHERE id=?", (session['user_id'],)).fetchone()
 
+    # Fetch barber info if applicable
+    barber = None
+    if session.get('role') == 'barber':
+        barber = db.execute("SELECT * FROM barbers WHERE user_id=?", (session['user_id'],)).fetchone()
+
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         phone    = request.form.get('phone', '').strip()
@@ -1094,36 +1099,49 @@ def edit_profile():
 
         if not username or not phone or not email:
             flash('Name, phone and email are required.', 'error')
-            return render_template('edit_profile.html', user=user)
+            return render_template('edit_profile.html', user=user, barber=barber)
 
         # Verify current password
         if not verify_password(cur_pass, user['password_hash']):
             flash('Current password is incorrect.', 'error')
-            return render_template('edit_profile.html', user=user)
+            return render_template('edit_profile.html', user=user, barber=barber)
 
         # Check email uniqueness (not self)
         taken = db.execute("SELECT id FROM users WHERE email=? AND id!=?",
                             (email, session['user_id'])).fetchone()
         if taken:
             flash('This email is already used by another account.', 'error')
-            return render_template('edit_profile.html', user=user)
+            return render_template('edit_profile.html', user=user, barber=barber)
 
         if new_pass:
             if len(new_pass) < 6:
                 flash('New password must be at least 6 characters.', 'error')
-                return render_template('edit_profile.html', user=user)
+                return render_template('edit_profile.html', user=user, barber=barber)
             db.execute("UPDATE users SET username=?, phone=?, email=?, password_hash=? WHERE id=?",
                        (username, phone, email, hash_password(new_pass), session['user_id']))
         else:
             db.execute("UPDATE users SET username=?, phone=?, email=? WHERE id=?",
                        (username, phone, email, session['user_id']))
 
+        # Update barber location fields if barber
+        if session.get('role') == 'barber' and barber:
+            salon_name = request.form.get('salon_name', '').strip()
+            address    = request.form.get('address', '').strip()
+            maps_link  = request.form.get('maps_link', '').strip()
+            if not salon_name or not address:
+                flash('Salon name and address are required.', 'error')
+                return render_template('edit_profile.html', user=user, barber=barber)
+            db.execute(
+                "UPDATE barbers SET salon_name=?, address=?, maps_link=? WHERE user_id=?",
+                (salon_name, address, maps_link, session['user_id'])
+            )
+
         db.commit()
         session['username'] = username
         flash('Profile updated successfully.', 'success')
         return redirect(url_for('edit_profile'))
 
-    return render_template('edit_profile.html', user=user)
+    return render_template('edit_profile.html', user=user, barber=barber)
 
 
 
