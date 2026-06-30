@@ -27,6 +27,34 @@
                value="{{ user.email }}" required>
       </div>
 
+      {% if session.role == 'barber' and barber %}
+      <div class="divider"></div>
+      <p style="font-weight:700;font-size:.88rem;margin-bottom:4px">📍 Salon Location</p>
+      <div class="form-group">
+        <label class="form-label" for="salon_name">Salon Name</label>
+        <input id="salon_name" name="salon_name" type="text" class="form-control"
+               value="{{ barber.salon_name }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="address">Address</label>
+        <input id="address" name="address" type="text" class="form-control"
+               value="{{ barber.address }}" required
+               placeholder="ex: 12 Rue Hassan II, Tétouan">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="maps_link">Google Maps Link <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input id="maps_link" name="maps_link" type="url" class="form-control"
+               value="{{ barber.maps_link or '' }}"
+               placeholder="https://maps.google.com/...">
+        {% if barber.maps_link %}
+        <a href="{{ barber.maps_link }}" target="_blank" rel="noopener"
+           style="display:inline-block;margin-top:6px;font-size:.78rem;color:var(--gold)">
+          🗺 View current location →
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
       <div class="divider"></div>
       <p class="muted" style="font-size:.82rem">Leave "New Password" empty to keep your current password.</p>
 
